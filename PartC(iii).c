@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NUM_TESTS 5
+#define NUM_TESTS 10
 #define MAX_S 128 // Maximum S value to test
 
 long long comparisons = 0; // to count the number of comparisons
@@ -123,7 +123,7 @@ void performSortingAndRecord(int size, FILE *file) {
     }
 
     // Write results to CSV
-    for (int s = 1; s <= MAX_S; s++) {
+    for (int s = 10; s <= MAX_S; s++) {
         fprintf(file, "%d,%d,%lld,%f\n", size, s, totalComparisons[s], totalTime[s]);
     }
 }
@@ -142,7 +142,7 @@ int main() {
     fprintf(file, "InputSize,S,AverageComparisons,AverageTime\n");
 
     // Test with various input sizes
-    int inputSizes[] = {100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600, 51200};
+    int inputSizes[] = {100, 1000, 10000, 100000, 200000, 300000, 400000, 500000, 750000, 1000000,10000000};
     int numSizes = sizeof(inputSizes) / sizeof(inputSizes[0]);
 
     for (int i = 0; i < numSizes; i++) {
@@ -154,3 +154,4 @@ int main() {
 
     return 0;
 }
+
