@@ -1,205 +1,156 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h> //to calculate the time complexity
+#include <time.h>
 
-#define NUM_TESTS 5 //number of tests to average
+#define NUM_TESTS 5
+#define MAX_S 128 // Maximum S value to test
 
-long long comparisons = 0; //to count the number to comparisons
-
-//insertion sort function to sort small subarrays
-
-void insertionSort(int arr[], int left , int right ) //start index - end index
-{
- //traverse through the array
- for(int i = left+1; i<= right ; i++)
- {
-    //take out the value
-    int value = arr[i];
-    int position = i;
-
-    //go through the while loop to compare
-    while(position > 0 && value < arr[position - 1])
-    {
-        comparisons++;
-        //move the larger value to the right
-        arr[position] = arr[position - 1];
-        //decrement the position to move the smaller value to the left
-        position --;
+long long comparisons = 0; // to count the number of comparisons
 
 
+//INSERTION SORT//
+void insertionSort(int arr[], int left, int right) {
+    //always start with 1 not 0 because the first element is always sorted
+    for (int i = left + 1; i <= right; i++) {
+        int value = arr[i];
+        int position = i;
+
+        while (position > left && value < arr[position - 1]) {
+            comparisons++;
+            //BIGGER elements move to the right
+            arr[position] = arr[position - 1];
+            //smaller elements move to the left
+            position--;
+        }
+
+        //FIND THE SPOT
+
+        arr[position] = value;
     }
-
-    //spot found!
-
-     arr[position] = value;
-
-
- }
-
-
 }
 
-//Merge sort for larger arrays
-
-void merge(int arr[], int left, int mid, int right)
-{
-    //number of elements in the left
-    int nleft  = (mid - left) + 1;
-    //number of elements in the right
-    int nright =    right - mid;
-
-    //allocating memory for 2 arrays
+void merge(int arr[], int left, int mid, int right) {
+    int nleft = (mid - left) + 1;
+    int nright = right - mid;
     int *leftarray = malloc(nleft * sizeof(int));
     int *rightarray = malloc(nright * sizeof(int));
 
-    //Populate the left array
-    for(int i = 0 ; i< nleft ; i++ )
-    {
+    for (int i = 0; i < nleft; i++) {
         leftarray[i] = arr[left + i];
     }
-    //populate the right array
-    for(int i = 0 ; i< nright ; i++)
-    {
-
+    for (int i = 0; i < nright; i++) {
         rightarray[i] = arr[mid + 1 + i];
     }
 
+    int i = left, l = 0, r = 0;
 
-    //MERGING BOTH
-
-    int i = left ; //pointer for arr
-    int l = 0 ; //left array pointer
-    int r = 0; //right array pointer
-
-    while(l<nleft && r < nright)
-    {
-         comparisons++;
-        if(leftarray[l] <= rightarray[r])
-        {
-             arr[i] = leftarray[l];
-             l++;
-        }
-        else
-        {
-          arr[i] = rightarray[r];
-             r++;
+    while (l < nleft && r < nright) {
+        comparisons++;
+        if (leftarray[l] <= rightarray[r]) {
+            arr[i] = leftarray[l];
+            l++;
+        } else {
+            arr[i] = rightarray[r];
+            r++;
         }
         i++;
-
     }
 
-    //remaining elements
-
-    while(l<nleft)
-    {
-      arr[i] = leftarray[l];
-      l++;
-      i++;
+    while (l < nleft) {
+        arr[i] = leftarray[l];
+        l++;
+        i++;
     }
 
-    while(r<nright)
-    {
-      arr[i] = rightarray[r];
-      r++;
-      i++;
+    while (r < nright) {
+        arr[i] = rightarray[r];
+        r++;
+        i++;
     }
 
-    //free
     free(leftarray);
     free(rightarray);
-
 }
 
-//Hybrid Merge
-
-void hybrideMergeSort(int arr[], int left , int right, int S)
-{
-    //check with the array size is smaller then threshold S
-    int n = (right - left)+1;
-    if(n <= S)
-    {
-        insertionSort(arr,left,right);
-    }
-    else
-    {
-        //terminate recurrsion line
-        if(left < right)
-        {
+void hybrideMergeSort(int arr[], int left, int right, int S) {
+    int n = (right - left) + 1;
+    //if the array size is smaller than the THRESHOLD, do Insertion sort
+    if (n <= S) {
+        insertionSort(arr, left, right);
+    } else {
+        if (left < right) {
             int mid = left + (right - left) / 2;
-            //left tree
-            hybrideMergeSort(arr,left,mid,S);
-            //right tree
-            hybrideMergeSort(arr,mid+1, right,S);
-            //merge both
-            merge(arr,left,mid,right);
-
+            hybrideMergeSort(arr, left, mid, S);
+            hybrideMergeSort(arr, mid + 1, right, S);
+            merge(arr, left, mid, right);
         }
     }
-
 }
 
-//Function to generate random arrays
-void generateArray(int arr[], int size , int max_value)
-{
-    for(int i = 0 ; i<size ; i++)
-    {
-        arr[i] = rand() % max_value+1; //within the max_value
+void generateArray(int arr[], int size, int max_value) {
+    for (int i = 0; i < size; i++) {
+        arr[i] = rand() % max_value + 1;
     }
-
 }
 
-//function to perform sorting and record comparisions
-long long performSortingAndRecord(int size, int S) {
-    long long totalComparisons = 0;
+//RECORDING AVERAGE TIME AND THE TOTAL NUMBER OF COMPARISIONS
+void performSortingAndRecord(int size, FILE *file) {
+    long long totalComparisons[MAX_S + 1] = {0}; //to store the number of comparisons
+    double totalTime[MAX_S + 1] = {0.0}; // total time taken for each value of S
 
-    for (int test = 0; test < NUM_TESTS; test++) {
-        int *arr = (int *)malloc(size * sizeof(int));
-        if (arr == NULL) {
-            printf("Memory allocation failed for array size %d\n", size);
-            return -1;
+    for (int s = 1; s <= MAX_S; s++) {
+            //EACH VALUE OF S, THERE ARE 5 tests
+        for (int test = 0; test < NUM_TESTS; test++) {
+            int *arr = (int *)malloc(size * sizeof(int));
+            if (arr == NULL) {
+                printf("Memory allocation failed for array size %d\n", size);
+                return;
+            }
+
+            generateArray(arr, size, 1000); //random numbers in the array
+            comparisons = 0; //INITIALIZE THE COMPARISONS
+            clock_t start = clock(); //START THE TIMER
+            hybrideMergeSort(arr, 0, size - 1, s);//DO THE HYBRID SORT
+            clock_t end = clock(); //STOP THE TIMER
+
+            totalComparisons[s] += comparisons;
+            totalTime[s] += (double)(end - start) / CLOCKS_PER_SEC;
+
+            free(arr);
         }
-
-        generateArray(arr, size, 1000);  // Generate random array
-
-        comparisons = 0;  // Reset comparisons for each test
-        hybrideMergeSort(arr, 0, size - 1, S);  // Perform hybrid merge sort
-        totalComparisons += comparisons;  // Accumulate comparisons
-
-        free(arr);
+        totalComparisons[s] /= NUM_TESTS;
+        totalTime[s] /= NUM_TESTS;
     }
 
-    return totalComparisons / NUM_TESTS;  // Return average comparisons
+    // Write results to CSV
+    for (int s = 1; s <= MAX_S; s++) {
+        fprintf(file, "%d,%d,%lld,%f\n", size, s, totalComparisons[s], totalTime[s]);
+    }
 }
 
+int main() {
+    srand(time(NULL));
 
-int main()
-{
-      srand(time(NULL));  // Initialize random number generator
-      //writing to the file
-       FILE *file = fopen("optimal_S.csv", "w");  // Open CSV file for writing
+    // Open CSV file for writing
+    FILE *file = fopen("optimal_S_results.csv", "w");
     if (file == NULL) {
         printf("Error opening file!\n");
         return 1;
     }
 
-    fprintf(file, "InputSize,S,KeyComparisons\n");  // Write CSV header
-    int inputSizes[] = {100, 1000, 5000, 10000, 50000};  // Array of input sizes
-    int numSizes = sizeof(inputSizes) / sizeof(inputSizes[0]);
-     for (int i = 0; i < numSizes; i++) {
-        int n = inputSizes[i];  // Get the input size
+    // Write CSV header
+    fprintf(file, "InputSize,S,AverageComparisons,AverageTime\n");
 
-        // Test with different values of S for each input size
-        for (int s = 1; s <= 100; s += 5) {
-            long long avgComparisons = performSortingAndRecord(n, s);
-            if (avgComparisons >= 0) {
-                fprintf(file, "%d,%d,%lld\n", n, s, avgComparisons);  // Write results to CSV
-            }
-        }
+    // Test with various input sizes
+    int inputSizes[] = {100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600, 51200};
+    int numSizes = sizeof(inputSizes) / sizeof(inputSizes[0]);
+
+    for (int i = 0; i < numSizes; i++) {
+        performSortingAndRecord(inputSizes[i], file);
     }
 
-    fclose(file);  // Close the CSV file
-    printf("Data written to optimal_S.csv\n");
-
+    fclose(file); // Close the CSV file
+    printf("Data written to optimal_S_results.csv\n");
 
     return 0;
 }
