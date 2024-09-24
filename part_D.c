@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define S 7       // Threshold for switching to Insertion Sort in Hybrid Sort
+#define S 11       // Threshold for switching to Insertion Sort in Hybrid Sort
 #define NUM_TESTS 30  // Number of tests to average
 
 // Global variables to count the number of comparisons
